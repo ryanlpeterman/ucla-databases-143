@@ -1,5 +1,7 @@
+USE CS143;
+
 /* All Actors in movie "Die Another Day" */
-SELECT first, last
+SELECT CONCAT(first ," ", last) AS Name
 FROM Movie m, MovieActor ma, Actor a
 WHERE m.id=ma.mid AND m.title="Die Another Day" AND ma.aid=a.id;
 

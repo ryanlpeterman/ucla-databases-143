@@ -14,8 +14,10 @@ CREATE TABLE Movie
 	title VARCHAR(100),
 	year INT,
 	rating VARCHAR(10),
-	company VARCHAR(50)
-);
+	company VARCHAR(50),
+    PRIMARY KEY(id),
+    CHECK (id>0)
+) ENGINE=INNODB;
 
 CREATE TABLE Actor
 (
@@ -24,8 +26,10 @@ CREATE TABLE Actor
 	first VARCHAR(20),
 	sex VARCHAR(6),
 	dob DATE,
-	dod DATE
-);
+	dod DATE NOT NULL,
+    PRIMARY KEY(id),
+    CHECK (id>0),
+) ENGINE=INNODB;
 
 CREATE TABLE Director
 (
@@ -33,44 +37,68 @@ CREATE TABLE Director
 	last VARCHAR(20),
 	first VARCHAR(20),
 	dob DATE,
-	dod DATE
-);
+	dod DATE NOT NULL,
+    PRIMARY KEY(id),
+    CHECK (id>0)
+) ENGINE=INNODB;
 
 CREATE TABLE MovieGenre
 (
-        mid INT,
-        genre VARCHAR(20)
-);
+    mid INT,
+    genre VARCHAR(20),
+    FOREIGN KEY(mid)
+        REFERENCES Movie(id)
+        ON DELETE CASCADE,
+    CHECK (mid>0)
+) ENGINE=INNODB;
 
 CREATE TABLE MovieDirector
 (
-        mid INT,
-        did INT
-);
+    mid INT,
+    did INT,
+    FOREIGN KEY(mid)
+        REFERENCES Movie(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY(did)
+        REFERENCES Director(id)
+        ON DELETE CASCADE,
+    CHECK (mid>0 AND did>0)
+) ENGINE=INNODB;
 
 CREATE TABLE MovieActor
 (
-        mid INT,
-        aid INT,
-        role VARCHAR(50)
-);
+    mid INT,
+    aid INT,
+    role VARCHAR(50),
+    FOREIGN KEY(mid)
+        REFERENCES Movie(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY(aid)
+        REFERENCES Actor(id)
+        ON DELETE CASADE,
+    CHECK (mid>0 AND aid>0)
+) ENGINE=INNODB;
 
 CREATE TABLE Review
 (
-        name VARCHAR(20),
-        time TIMESTAMP,
-        mid INT,
-        rating INT,
-        comment VARCHAR(500)
-);
+    name VARCHAR(20),
+    time TIMESTAMP,
+    mid INT,
+    rating INT,
+    comment VARCHAR(500),
+    FOREIGN KEY(mid)
+        REFERENCES Movie(id)
+        ON DELETE CASCADE,
+    CHECK (mid>0)
+) ENGINE=INNODB;
 
 CREATE TABLE MaxPersonID
 (
-        id INT
-);
+    id INT
+) ENGINE=INNODB;
 
 CREATE TABLE MaxMovieID
 (
-        id INT
-);
+    id INT
+) ENGINE=INNODB;
 

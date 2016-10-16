@@ -1,0 +1,43 @@
+PRIMARY KEY CONSTRAINTS:
+Movie (unique id)
+Actor (unique id)
+Director (unique id)
+
+REFERENTIAL INTEGRITY CONSTRAINTS:
+Every movie genre tuple is tied to a movie. If the movie dies, then so does its genre information.
+
+Every movie director tuple is tied to a movie. If the movie dies, then so
+does its movie director information.
+
+Every movie director tuple is tied to a director. If the director dies,
+then so does its movie director information.
+
+Every movie actor tuple is tied to a movie. If the movie dies, then so does
+its movie actor information.
+
+Every movie actor tuple is tied to an actor. If the actor dies, then so does its movie actor information.
+
+Every review tuple is tied to a movie. If the movie dies, then so does its
+review information.
+
+CHECK CONSTRAINTS:
+Movie id must be greater than 0.
+
+Actor id must be greater than 0.
+
+Director id must be greater than 0.
+
+MovieGenre mid must be greater than 0.
+
+MovieDirector mid must be greater than 0.
+
+MovieDirector did must be greater than 0.
+
+MovieActor mid must be greater than 0.
+
+MovieActor aid must be greater than 0.
+
+Review mid must be greater than 0.
+
+OTHER:
+Actor dob must not be NULL.
