@@ -1,12 +1,16 @@
-DROP TABLE IF EXISTS Movie;
-DROP TABLE IF EXISTS Actor;
-DROP TABLE IF EXISTS Director;
-DROP TABLE IF EXISTS MovieGenre;
+USE CS143;
+
+/* Drop order matters due to foreign key constraints */
+DROP TABLE IF EXISTS MovieGenre; 
 DROP TABLE IF EXISTS MovieDirector;
 DROP TABLE IF EXISTS MovieActor;
 DROP TABLE IF EXISTS Review;
 DROP TABLE IF EXISTS MaxPersonID;
 DROP TABLE IF EXISTS MaxMovieID;
+
+DROP TABLE IF EXISTS Movie;
+DROP TABLE IF EXISTS Actor;
+DROP TABLE IF EXISTS Director;
 
 CREATE TABLE Movie 
 (
@@ -28,7 +32,7 @@ CREATE TABLE Actor
 	dob DATE,
 	dod DATE NOT NULL,
     PRIMARY KEY(id),
-    CHECK (id>0),
+    CHECK(id>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE Director
@@ -39,7 +43,7 @@ CREATE TABLE Director
 	dob DATE,
 	dod DATE NOT NULL,
     PRIMARY KEY(id),
-    CHECK (id>0)
+    CHECK(id>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE MovieGenre
@@ -49,7 +53,7 @@ CREATE TABLE MovieGenre
     FOREIGN KEY(mid)
         REFERENCES Movie(id)
         ON DELETE CASCADE,
-    CHECK (mid>0)
+    CHECK(mid>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE MovieDirector
@@ -62,7 +66,7 @@ CREATE TABLE MovieDirector
     FOREIGN KEY(did)
         REFERENCES Director(id)
         ON DELETE CASCADE,
-    CHECK (mid>0 AND did>0)
+    CHECK(mid>0 AND did>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE MovieActor
@@ -75,8 +79,8 @@ CREATE TABLE MovieActor
         ON DELETE CASCADE,
     FOREIGN KEY(aid)
         REFERENCES Actor(id)
-        ON DELETE CASADE,
-    CHECK (mid>0 AND aid>0)
+        ON DELETE CASCADE,
+    CHECK(mid>0 AND aid>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE Review
@@ -89,7 +93,7 @@ CREATE TABLE Review
     FOREIGN KEY(mid)
         REFERENCES Movie(id)
         ON DELETE CASCADE,
-    CHECK (mid>0)
+    CHECK(mid>0)
 ) ENGINE=INNODB;
 
 CREATE TABLE MaxPersonID

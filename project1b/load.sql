@@ -1,3 +1,5 @@
+USE CS143;
+
 LOAD DATA LOCAL INFILE '~/data/movie.del'
 	INTO TABLE Movie
 	FIELDS TERMINATED BY ','
