@@ -1,43 +1,38 @@
+Names: Max Chern | Ryan Peterman
+UID:   304290221 | 704269982
+
+All constraints are specified in create.sql
+
 PRIMARY KEY CONSTRAINTS:
-Movie (unique id)
-Actor (unique id)
-Director (unique id)
+    1. Movie (unique id)
+    2. Actor (unique id)
+    3. Director (unique id)
 
 REFERENTIAL INTEGRITY CONSTRAINTS:
-Every movie genre tuple is tied to a movie. If the movie dies, then so does its genre information.
-
-Every movie director tuple is tied to a movie. If the movie dies, then so
-does its movie director information.
-
-Every movie director tuple is tied to a director. If the director dies,
-then so does its movie director information.
-
-Every movie actor tuple is tied to a movie. If the movie dies, then so does
-its movie actor information.
-
-Every movie actor tuple is tied to an actor. If the actor dies, then so does its movie actor information.
-
-Every review tuple is tied to a movie. If the movie dies, then so does its
-review information.
+    1. Every movie genre tuple is tied to a movie. If the movie dies, then so does its genre information.
+    2. Every movie director tuple is tied to a movie. If the movie dies, then so
+    does its movie director information.
+    3. Every movie director tuple is tied to a director. If the director dies,
+    then so does its movie director information.
+    4. Every movie actor tuple is tied to a movie. If the movie dies, then so does
+    its movie actor information.
+    5. Every movie actor tuple is tied to an actor. If the actor dies, then so does its movie actor information.
+    6. Every review tuple is tied to a movie. If the movie dies, then so does its
+    review information.
 
 CHECK CONSTRAINTS:
-Movie id must be greater than 0.
-
-Actor id must be greater than 0.
-
-Director id must be greater than 0.
-
-MovieGenre mid must be greater than 0.
-
-MovieDirector mid must be greater than 0.
-
-MovieDirector did must be greater than 0.
-
-MovieActor mid must be greater than 0.
-
-MovieActor aid must be greater than 0.
-
-Review mid must be greater than 0.
+    1. Movie id must be greater than 0.
+    2. Actor id must be greater than 0.
+    3. Director id must be greater than 0.
+    4. MovieGenre mid must be greater than 0.
+    5. MovieDirector mid must be greater than 0.
+    6. MovieDirector did must be greater than 0.
+    7. MovieActor mid must be greater than 0.
+    8. MovieActor aid must be greater than 0.
+    9. Review mid must be greater than 0.
 
 OTHER:
-Actor dob must not be NULL.
+    1. Actor dob must not be NULL.
+    2. Movie title must not be NULL.
+    3. Actors must have names/not be NULL names.
+    4. Directors must have names.

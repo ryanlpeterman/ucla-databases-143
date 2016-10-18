@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS Director;
 CREATE TABLE Movie 
 (
 	id INT,
-	title VARCHAR(100),
+	title VARCHAR(100) NOT NULL,
 	year INT,
 	rating VARCHAR(10),
 	company VARCHAR(50),
@@ -26,8 +26,8 @@ CREATE TABLE Movie
 CREATE TABLE Actor
 (
 	id INT,
-	last VARCHAR(20),
-	first VARCHAR(20),
+	last VARCHAR(20) NOT NULL,
+	first VARCHAR(20) NOT NULL,
 	sex VARCHAR(6),
 	dob DATE,
 	dod DATE NOT NULL,
@@ -38,8 +38,8 @@ CREATE TABLE Actor
 CREATE TABLE Director
 (
 	id INT,
-	last VARCHAR(20),
-	first VARCHAR(20),
+	last VARCHAR(20) NOT NULL,
+	first VARCHAR(20) NOT NULL,
 	dob DATE,
 	dod DATE NOT NULL,
     PRIMARY KEY(id),
