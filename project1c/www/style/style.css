@@ -2,14 +2,28 @@ body {
     font-family: Lato;
 }
 
+form {
+    width: 50%;
+    float: left;
+}
+
+div #response {
+    width: 30%;
+    float: left;
+}
+
+.clear {
+    clear:both;
+}
+
 #raised-interface {
-    height: 90%;
     width: 60%;
     background-color: white;
     margin: auto;
     box-shadow: 0 0 20px #888888;
     padding-left: 100px;
     padding-right: 100px;
+    padding-bottom: 20px;
 }
 
 #raised-interface h1 {
