@@ -40,6 +40,9 @@
                         <h3> Date of Death </h3>
                         <input type="text" placeholder="date of death" name="date-of-death"/>
                         <h4> (Leave blank if still alive) </h4> 
+
+                        <br>
+                        <br>
                         <input type="submit" value="Submit"/>                   
                     </form>
                 </div>
