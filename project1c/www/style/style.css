@@ -1,0 +1,84 @@
+body {
+    font-family: Lato;
+}
+
+#raised-interface {
+    height: 90%;
+    width: 60%;
+    background-color: white;
+    margin: auto;
+    box-shadow: 0 0 20px #888888;
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+#raised-interface h1 {
+    text-align: center;
+    padding: 20px;
+}
+
+#navicol {
+    background-color: hsl(240, 60%, 60%);
+    width: 200px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    z-index: 10;
+    box-shadow: 0 0 30px #888888;
+    padding: 10px
+}
+
+button {
+    margin: auto;
+}
+#logo {
+    color: white;
+    font-size: 25px;
+    width: 200px;
+    height: 40px;
+    line-height: 40px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    vertical-align: middle;
+    padding-left: 10px;
+}
+
+#logo:hover {
+    cursor: pointer;
+}
+
+.navibutton:hover {
+    cursor: pointer;
+    background-color: hsl(240, 80%, 80%);
+    color: white;
+
+}
+
+.navibutton {
+    color: hsl(210, 0%, 80%);
+    font-size: 15px;
+    width: 200px;
+    height: 30px;
+    line-height: 30px;
+    vertical-align: middle;
+    padding-left: 10px;
+}
+
+#content {
+    background-color: #e5e5e5; 
+    top: 0;
+    bottom: 0;
+    left: 200px;
+    right: 0;
+    position: absolute;
+    height: 100%;
+}
+
+.selected {
+    color: white;
+}
+
+a {
+    text-decoration:none;
+}
