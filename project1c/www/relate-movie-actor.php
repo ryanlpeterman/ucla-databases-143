@@ -17,25 +17,94 @@
                 <a href="search.php"><div class="navibutton">Search Actors/Movies</div></a>
             </div>
 
+<?php
+            $servername = "localhost";
+            $username = "cs143";
+            $password = "";
+            $dbname = "CS143";
+            
+            // Create connection
+            $conn = new mysqli($servername, $username, $password, $dbname);
+            
+            // Check connection
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            } 
+
+            $movie_query = "SELECT title, year, id FROM Movie;";
+            $actor_query = "SELECT first, last, dob, id FROM Actor";
+
+            $movie_res = $conn->query($movie_query);
+            $actor_res = $conn->query($actor_query);
+
+        ?>
+
+
             <div id="content">
                 <div id="raised-interface">
                     <h1> Add Movie Actor Relation </h1>
                     <form method="GET">
                         <h3> Movie Title </h3>
                         <select name="movie">
+                            <?php
+                                while($row = $movie_res->fetch_assoc()) {
+			            echo "<option value='" . $row["id"] . "'> " . $row["title"] . " (" . $row["year"] . ")</option>";
+			        }
+                            ?>
                         </select>
 
                         <h3> Actor </h3>
                         <select name="actor">
+			    <?php
+			        while($row = $actor_res->fetch_assoc()) {
+			            echo "<option value='" . $row["id"] . "'> " . $row["first"] . " " . $row["last"] . " (" . $row["dob"] . ")</option>";
+			        }
+			    ?>
                         </select>
                         
-                        <h3> Title </h3>
+                        <h3> Role </h3>
                         <input type="text" placeholder="role in movie" name="role"/>            
                         <br>
                         <br>
                         <input type="submit" value="Submit"/>                   
                     </form>
+
+                <div id="response">
+		  <?php
+		     $correct_formatting = true;
+		     $forms = $_GET;
+		     if (empty($forms)) {
+		       $correct_formatting = false;
+		     }
+
+		     foreach($forms as $key => $value) {
+		       if ($value == "") {
+		          echo $key . " must be specified!<br>";
+		          $correct_formatting = false;
+		       }
+		     }
+
+		     if ($correct_formatting) {
+		       $query = "INSERT INTO MovieActor VALUES (" . $forms["movie"] . ", " . $forms["actor"] . ", '" . $forms["role"] . "');";
+		     
+		       $result = $conn->query($query);
+
+		       if (!$result) {
+		         echo "Invalid Query!";
+		       } else {
+		         echo "Added Successfully!";
+		       }
+		       
+		     }
+
+		     $conn->close();
+
+		  ?>
+		</div>
+                <br class="clear"/>
                 </div>
             </div>
+
+
         </body>
 </html>
