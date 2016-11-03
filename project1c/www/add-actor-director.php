@@ -100,8 +100,12 @@
                 die("Connection failed: " . $conn->connect_error);
             } 
             $correct_formatting = true;
+    
             // get query from text-area
             $forms = $_GET;
+            if (empty($forms)) {
+                $correct_formatting = false;
+            }        
             // check that all fields are not empty except dod
             foreach($forms as $key => $value) {
                 if ($key != "date-of-death" and $value == "") {
