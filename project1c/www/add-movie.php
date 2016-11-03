@@ -38,25 +38,25 @@
                         </select>
 
                         <h3> Genre </h3>
-                        <input type="checkbox" value="Action">Action</input>
-                        <input type="checkbox" value="Adult">Adult</input>
-                        <input type="checkbox" value="Adventure">Adventure</input>
-                        <input type="checkbox" value="Animation">Animation</input>
-                        <input type="checkbox" value="Comedy">Comedy</input>
-                        <input type="checkbox" value="Crime">Crime</input>
-                        <input type="checkbox" value="Documentary">Documentary</input>
-                        <input type="checkbox" value="Drama">Drama</input>
-                        <input type="checkbox" value="Family">Family</input>
-                        <input type="checkbox" value="Fantasy">Fantasy</input>
-                        <input type="checkbox" value="Horror">Horror</input>
-                        <input type="checkbox" value="Musical">Musical</input>
-                        <input type="checkbox" value="Mystery">Mystery</input>
-                        <input type="checkbox" value="Romance">Romance</input>
-                        <input type="checkbox" value="Sci-fi">Sci-Fi</input>
-                        <input type="checkbox" value="Short">Short</input>
-                        <input type="checkbox" value="Thriller">Thriller</input>
-                        <input type="checkbox" value="War">War</input>
-                        <input type="checkbox" value="Western">Western</input>
+                        <input type="checkbox" name="genre_list[]" value="Action">Action</input>
+                        <input type="checkbox" name="genre_list[]" value="Adult">Adult</input>
+                        <input type="checkbox" name="genre_list[]" value="Adventure">Adventure</input>
+                        <input type="checkbox" name="genre_list[]" value="Animation">Animation</input>
+                        <input type="checkbox" name="genre_list[]" value="Comedy">Comedy</input>
+                        <input type="checkbox" name="genre_list[]" value="Crime">Crime</input>
+                        <input type="checkbox" name="genre_list[]" value="Documentary">Documentary</input>
+                        <input type="checkbox" name="genre_list[]" value="Drama">Drama</input>
+                        <input type="checkbox" name="genre_list[]" value="Family">Family</input>
+                        <input type="checkbox" name="genre_list[]" value="Fantasy">Fantasy</input>
+                        <input type="checkbox" name="genre_list[]" value="Horror">Horror</input>
+                        <input type="checkbox" name="genre_list[]" value="Musical">Musical</input>
+                        <input type="checkbox" name="genre_list[]" value="Mystery">Mystery</input>
+                        <input type="checkbox" name="genre_list[]" value="Romance">Romance</input>
+                        <input type="checkbox" name="genre_list[]" value="Sci-fi">Sci-Fi</input>
+                        <input type="checkbox" name="genre_list[]" value="Short">Short</input>
+                        <input type="checkbox" name="genre_list[]" value="Thriller">Thriller</input>
+                        <input type="checkbox" name="genre_list[]" value="War">War</input>
+                        <input type="checkbox" name="genre_list[]" value="Western">Western</input>
                         <br>
                         <br>
                         <input type="submit" value="Submit"/>                   
@@ -115,14 +115,29 @@
 			     $correct_formatting = false;
 			   }
 			 }
+			if ($correct_formatting) {
+			  // get the max_id
+			  $max_id_res = $conn->query("SELECT * FROM MaxMovieID");
+			  $max_id = $max_id_res->fetch_assoc()["id"];
 
-		        //get max_id
-			//perform query
-			//if fails say why
-			//if not increment
+			  $query = "INSERT INTO Movie VALUES (" . $max_id . ", '" . $forms["title"] . "', " . $forms["year"] . ", '" . $forms["rating"] . "', '" . $forms["company"] . "');";
+			  $result = $conn->query($query);
 
-			//go through genre checkboxes; if checked, add that movie/genre info into genre table
+			  if (!$result) {
+			    echo "Invalid Query!";
+			  } else {
+			    // if all went well, update the max movie id
+			    $update_query = "UPDATE MaxMovieID SET id=id+1;";
+			    $conn->query($update_query);
 
+			    //go through and add genre information
+			    
+
+			    echo "Added Successfully!";
+			  }
+
+			}
+					    
 		      ?>
 		    </div>
 
