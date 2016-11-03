@@ -61,6 +61,71 @@
                         <br>
                         <input type="submit" value="Submit"/>                   
                     </form>
+
+		    <div id="response">
+		      <?php
+			 $servername = "localhost";
+			 $username = "cs143";
+			 $password = "";
+			 $dbname = "CS143";
+
+			 // Create connection
+			 $conn = new mysqli($servername, $username, $password, $dbname);
+			 // Check connection
+			 if ($conn->connect_error) {
+		           die("Connection failed: " . $conn->connect_error);
+		         }
+		         $correct_formatting = true;
+
+		         $forms = $_GET;
+		         if (empty($forms)) {
+		           $correct_formatting = false;
+		         }
+		      
+		         // check that title and comapny are not empty
+		         if ($forms["title"] == "") {
+		           echo "Title must be specified!<br>";
+		           $correct_formatting = false;
+		         }
+		         if ($forms["company"] == "") {
+		           echo "Company must be specified!<br>";
+		           $correct_formatting = false;
+		         }
+
+		         // check for valid year
+		         $input_year = $forms["year"];
+		         $year_len = strlen($input_year);
+		         if (year_len != 4) {
+		           echo "Year is invalid!<br>";
+		           $correct_formatting = false;
+		         } else {
+		           for ($i = 0; $i < $year_len; $i++) {
+			     $char = $input_year[$i];
+			     // if any of the 4 chars is not numeric
+			     if (!is_numeric($char)) {
+			       echo "Year is invalid!<br>";
+			       $correct_formatting = false;
+                               break;
+			     }
+			   }
+			 }
+			 if ($correct_formatting) {
+			   if (intval($input_year) < 1000 or intval($input_year) > 9999) {
+			     echo "Year is invalid!<br>";
+			     $correct_formatting = false;
+			   }
+			 }
+
+		        //get max_id
+			//perform query
+			//if fails say why
+			//if not increment
+
+			//go through genre checkboxes; if checked, add that movie/genre info into genre table
+
+		      ?>
+		    </div>
+
                 </div>
             </div>
         </body>
