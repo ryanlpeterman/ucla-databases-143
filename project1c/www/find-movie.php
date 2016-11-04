@@ -10,6 +10,7 @@
                 <a href="index.php"><div id="logo">Project 1C</div></a>
                 <a href="add-actor-director.php"><div class="navibutton">Add Actor/Director</div></a>
                 <a href="add-movie.php"><div class="navibutton">Add Movie Info</div></a>
+		<a href="add-review.php"><div class="navibutton">Add Review</div></a>
                 <a href="relate-movie-actor.php"><div class="navibutton">Relate Movie/Actor</div></a>
                 <a href="relate-movie-director.php"><div class="navibutton">Relate Movie/Director</div></a>
                 <a href="find-actor.php"><div class="navibutton">Find Actor</div></a>
