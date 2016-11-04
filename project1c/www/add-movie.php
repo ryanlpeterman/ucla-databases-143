@@ -81,34 +81,37 @@
 		         if (empty($forms)) {
 		           $correct_formatting = false;
 		         }
-		      
-		         // check that title and comapny are not empty
-		         if ($forms["title"] == "") {
-		           echo "Title must be specified!<br>";
-		           $correct_formatting = false;
-		         }
-		         if ($forms["company"] == "") {
-		           echo "Company must be specified!<br>";
-		           $correct_formatting = false;
-		         }
+                 // to prevent error messages from printing on page load
+		         if ($correct_formatting) {
+		            // check that title and comapny are not empty
+		            if ($forms["title"] == "") {
+		              echo "Title must be specified!<br>";
+		              $correct_formatting = false;
+		            }
+		            if ($forms["company"] == "") {
+		              echo "Company must be specified!<br>";
+		              $correct_formatting = false;
+		            }
 
-		         // check for valid year
-		         $input_year = $forms["year"];
-		         $year_len = strlen($input_year);
-		         if (year_len != 4) {
-		           echo "Year is invalid!<br>";
-		           $correct_formatting = false;
-		         } else {
-		           for ($i = 0; $i < $year_len; $i++) {
-			     $char = $input_year[$i];
-			     // if any of the 4 chars is not numeric
-			     if (!is_numeric($char)) {
-			       echo "Year is invalid!<br>";
-			       $correct_formatting = false;
-                               break;
-			     }
-			   }
-			 }
+		            // check for valid year
+		            $input_year = $forms["year"];
+		            $year_len = strlen($input_year);
+		            if ($year_len != 4) {
+		              echo "Year is invalid!<br>";
+		              $correct_formatting = false;
+		            } else {
+		                for ($i = 0; $i < $year_len; $i++) {
+			                $char = $input_year[$i];
+			                // if any of the 4 chars is not numeric
+			                if (!is_numeric($char)) {
+			                  echo "Year is invalid!<br>";
+			                  $correct_formatting = false;
+                                          break;
+			                }
+			            }
+			        }
+
+                }
 			 if ($correct_formatting) {
 			   if (intval($input_year) < 1000 or intval($input_year) > 9999) {
 			     echo "Year is invalid!<br>";
@@ -119,10 +122,11 @@
 			  // get the max_id
 			  $max_id_res = $conn->query("SELECT * FROM MaxMovieID");
 			  $max_id = $max_id_res->fetch_assoc()["id"];
-
+                
+              // add movie to movie table
 			  $query = "INSERT INTO Movie VALUES (" . $max_id . ", '" . $forms["title"] . "', " . $forms["year"] . ", '" . $forms["rating"] . "', '" . $forms["company"] . "');";
 			  $result = $conn->query($query);
-
+              
 			  if (!$result) {
 			    echo "Invalid Query!";
 			  } else {
@@ -131,7 +135,15 @@
 			    $conn->query($update_query);
 
 			    //go through and add genre information
-			    
+			    foreach ($forms["genre_list"] as $genre) {
+                    $insert_genre = "INSERT INTO MovieGenre VALUES (" . $max_id . ", '" . $genre . "');";
+                    $genre_res = $conn->query($insert_genre);
+                    if ($genre_res) {
+                        echo "Added ".$genre." to Movie<br>";
+                    } else {
+                        echo "Failed to add ". $genre ." as a genre to movie<br>";
+                    }
+                }   
 
 			    echo "Added Successfully!";
 			  }
@@ -140,7 +152,7 @@
 					    
 		      ?>
 		    </div>
-
+                <br class="clear"/>
                 </div>
             </div>
         </body>

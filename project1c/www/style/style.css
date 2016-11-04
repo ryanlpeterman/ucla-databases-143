@@ -2,6 +2,10 @@ body {
     font-family: Lato;
 }
 
+#searchform {
+    width: 100%;
+}
+
 form {
     width: 50%;
     float: left;
