@@ -78,12 +78,14 @@
                             }
                             // close header
                             $column_header = $column_header . "</tr>";
-                            echo $column_header;
-                            
+                            if ($result->num_rows != 0) {
+                                echo $column_header;
+                            }
                             if ($result->num_rows > 0) {
                                  // output data of each row
                                  while($row = $result->fetch_assoc()) {
                                         echo "<tr>";
+                                        
                                          foreach ($header_fields as $header) {
                                             if($header == "last" or $header == "first" or $header == "dob") {
                                                 echo "<td><a href='show.php?aid=" . $row["id"] . "'>" . $row[$header] . "</a></td>";

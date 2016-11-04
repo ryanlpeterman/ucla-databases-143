@@ -130,7 +130,7 @@
 
                 if ($forms["person-type"] == "Actor") {
                     $query = "INSERT INTO Actor VALUES (" . $max_id . ", '" . $forms["last-name"] . "', '" . $forms["first-name"] . "', '" . $forms["gender"] . "', '" . $forms["date-of-birth"] . "', '" . $dod . "');";
-                    echo $query;
+
                 } else {
                     $query = "INSERT INTO Director VALUES (" . $max_id . ", '" . $forms["last-name"] . "', '" . $forms["first-name"] . "', '" . $forms["date-of-birth"] . "', '" . $dod . "');";
                 }

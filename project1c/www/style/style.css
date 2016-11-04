@@ -2,6 +2,13 @@ body {
     font-family: Lato;
 }
 
+table, th, td {
+    border: 1px solid black;
+    margin: auto;
+    background-color: white;
+    box-shadow: 0 0 10px #888888;    
+}
+
 #searchform {
     width: 100%;
 }
