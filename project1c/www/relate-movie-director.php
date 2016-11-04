@@ -96,8 +96,8 @@
 		     $conn->close();
 
 		  ?>
-		</div>
-
+		    </div>
+               <br class="clear"/>
                 </div>
             </div>
         </body>
