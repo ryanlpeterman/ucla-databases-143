@@ -13,8 +13,6 @@
 		<a href="add-review.php"><div class="navibutton">Add Review</div></a>
                 <a href="relate-movie-actor.php"><div class="navibutton">Relate Movie/Actor</div></a>
                 <a href="relate-movie-director.php"><div class="navibutton">Relate Movie/Director</div></a>
-                <a href="find-actor.php"><div class="navibutton">Find Actor</div></a>
-                <a href="find-movie.php"><div class="navibutton">Find Movie</div></a>
                 <a href="search.php"><div class="navibutton">Search Actors/Movies</div></a>
             </div>
 
@@ -43,7 +41,7 @@
                     <h1> Add Review </h1>
                     <form method="GET">
                         <h3> Name </h3>
-                        <input type="text" placeholder="your name" name="name"/>            
+                        <input type="text" placeholder="Anonymous" name="name"/>            
 
 			<h3> Movie Title </h3>
 			<select name="movie">
@@ -80,14 +78,12 @@
 			 }
 
 			 if ($correct_formatting) {
-			   if ($forms["name"] == "") {
-			     echo "Please enter your name!<br>";
-			     $correct_formatting = false;
+			   $reviewer_name = $forms["name"];
+			   if ($reviewer_name == "") {
+			     $reviewer_name = "Anonymous";
 			   }
-			 }
 
-			 if ($correct_formatting) {
-			   $query = "INSERT INTO Review VALUES ('" . $forms["name"] . "', NOW(), " . $forms["movie"] . ", " . $forms["rating"] . ", '" . $forms["comment"] . "');";
+			   $query = "INSERT INTO Review VALUES ('" . $reviewer_name . "', NOW(), " . $forms["movie"] . ", " . $forms["rating"] . ", '" . $forms["comment"] . "');";
 			   $result = $conn->query($query);
 
 		           if (!$result) {
