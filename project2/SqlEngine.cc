@@ -132,10 +132,31 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-  /* your code here */
-  cout << table << endl;
-  cout << loadfile << endl;
-  cout << index << endl;
+  // conversion for type
+  const char* loadfile_name = loadfile.c_str();
+  RecordFile* rf_handle = new RecordFile();
+ 
+  // create file named table.tbl 
+  rf_handle->open(table + ".tbl", 'w');
+
+  // fill in table.tbl with each line of load file interpreted as a tuple
+  // store using the RecordFile api
+  ifstream infile (loadfile_name);
+
+  int key;
+  string value;
+  RecordId rid;
+
+  // for every line in file
+  for (string line; getline(infile, line);) {
+    parseLoadLine(line, key, value);
+    rid = rf_handle->endRid();
+
+    rf_handle->append(key, value, rid);  
+  }
+
+  // Just in case:
+  delete rf_handle;
   return 0;
 }
 
