@@ -22,6 +22,8 @@ BTLeafNode::BTLeafNode()
 
 BTLeafNode::BTLeafNode(PageId pid, const PageFile& pf)
 {
+  // If we're initializing a BTLeafNode according to a pid of a pf,
+  // then just read the data in
   read(pid, pf);
 }
 
@@ -254,7 +256,47 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  * @return 0 if searchKey is found. Otherwise return an error code.
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
-{ return 0; }
+{
+  int numKeys = getKeyCount();
+  char* curPtr = buffer + sizeof(char) + sizeof(int);
+  int curKey;
+  size_t sizeOfPair = sizeof(RecordId) + sizeof(int);
+
+  eid = 0;
+
+  // For all of the pairs...
+  for (int i = 0; i < numKeys; i++) {
+
+    // Get the key value of that pair
+    memcpy(&curKey, curPtr + sizeof(RecordId), sizeof(int));
+    if (curKey < searchKey) {
+
+      // If the current key is less than searchKey, then
+      // increment eid and continue searching
+      eid++;
+
+    } else if (curKey == searchKey) {
+
+      // If we find it, then eid is already set correctly
+      // return 0
+      return 0;
+
+    } else {
+
+      // If we reach a key that is greater than searchKey, then break
+      break;
+
+    }
+
+    // Each time, increment curPtr forward to look at the next pair
+    curPtr += sizeOfPair;
+
+  }
+
+  // If we don't find it, return RC_NO_SUCH_RECORD
+  return RC_NO_SUCH_RECORD;
+
+}
 
 /*
  * Read the (key, rid) pair from the eid entry.
