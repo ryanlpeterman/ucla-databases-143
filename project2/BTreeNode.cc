@@ -155,7 +155,92 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
  */
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
-{ return 0; }
+{
+
+  // TODO: Check if sibling node is empty?
+
+  size_t sizeOfPair = sizeof(RecordId) + sizeof(int);
+
+  // The number of pairs we need to move into the new sibling node
+  // is equal to (oldcount+1)/2
+  int oldCount = getKeyCount();
+  int numPairsToNewNode = (oldCount+1)/2;
+
+  // TODO: Check if oldCount is less than 1?
+
+  // curPtr points to the last pair in the original node
+  char* curPtr = buffer + sizeof(char) + sizeof(int) + ((oldCount - 1) * sizeOfPair);
+  int curKey;
+  
+  RecordId ridToInsert;
+  int newKeyCount;
+
+  bool insertedNewPair = false;
+
+  // This loop moves pairs over to the new sibling node one at a time until
+  //   the sibling node has the correct amount of pairs.
+  // If we ever reach a key value that is smaller than the one we are trying
+  //   to insert, then we insert the to-be-inserted pair instead, and continue.
+  while (numPairsToNewNode > 0) {
+    
+    // Get current key value
+    memcpy(&curKey, curPtr + sizeof(RecordId), sizeof(int));
+    
+    // If we've already inserted the to-be-inserted pair
+    // -or-
+    // If the current key is greater than the to-be-inserted pair's key
+    if (insertedNewPair || curKey > key) {
+      
+      // Get the rid of the current pair
+      // Insert the pair into the new sibling node
+      memcpy(&ridToInsert, curPtr, sizeof(RecordId));
+      sibling.insert(curKey, ridToInsert);
+
+      // Decrement this node's key count
+      newKeyCount = getKeyCount() - 1;
+      memcpy(buffer + sizeof(char), &newKeyCount, sizeof(int));      
+
+      // Move the curPtr left so we can look at the next pair
+      // Decrement numPairsToNewNode since we've inserted one to the
+      // new sibling node
+      curPtr -= sizeOfPair;
+      numPairsToNewNode--;
+
+      // If we haven't inserted the to-be-inserted pair
+      // -and-
+      // The to-be-inserted pair's key is greater than the current key
+    } else {
+
+      // Insert the to-be-inserted pair into the new sibling node
+      // Set insertedNewPair to true, so we don't do it again
+      sibling.insert(key, rid);
+      insertedNewPair = true;
+
+      // Decrement numPairsToNewNode sicne we've inserted one to the
+      // new sibling node
+      numPairsToNewNode--;
+
+    }
+
+  }
+
+  // If we've inserted the correct number of pairs into the new sibling node
+  // but we haven't inserted the to-be-inserted pair, then insert that
+  // pair into this node
+  if (!insertedNewPair) {
+    insert(key, rid);
+  }
+
+  // temp RecordId to be passed in, we don't use its values
+  RecordId temp;
+  // Read the first entry of the new sibling node to set siblingKey
+  sibling.readEntry(0, siblingKey, temp);
+
+  return 0;
+
+  // TODO: Set next node ptr? I think it's done by BTreeIndex though
+
+}
 
 /**
  * If searchKey exists in the node, set eid to the index entry
