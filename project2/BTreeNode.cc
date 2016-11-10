@@ -97,7 +97,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
   // Initialize two pointers
   // rightPtr points to the next avilable pair position (initially empty)
   // leftPtr points to the last non-empty pair position
-  char* rightPtr = buffer + sizeof(char) + (oldCount * sizeOfPair);
+  char* rightPtr = buffer + sizeof(char) + sizeof(int) + (oldCount * sizeOfPair);
   char* leftPtr = rightPtr - sizeOfPair;
 
   // curNum is set to the pair number of the second-to-last pair
@@ -189,7 +189,7 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 
   // Get pointer to the target pair
   // Use memcpy to set rid and key to the values in the pair
-  char* pairPtr = buffer + sizeof(char) + (eid * sizeOfPair);
+  char* pairPtr = buffer + sizeof(char) + sizeof(int) + (eid * sizeOfPair);
   memcpy(&rid, pairPtr, sizeof(RecordId));
   memcpy(&key, pairPtr + sizeof(RecordId), sizeof(int));
 
