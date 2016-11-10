@@ -84,7 +84,64 @@ int BTLeafNode::getKeyCount()
  * @return 0 if successful. Return an error code if the node is full.
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
-{ return 0; }
+{
+  // If node is full, return error code
+  int oldCount = getKeyCount();
+  if (oldCount >= PAIRS_PER_NODE) {
+    return RC_NODE_FULL;
+  }
+
+  // Size of a (rid, key) pair
+  size_t sizeOfPair = sizeof(RecordId) + sizeof(int);
+  
+  // Initialize two pointers
+  // rightPtr points to the next avilable pair position (initially empty)
+  // leftPtr points to the last non-empty pair position
+  char* rightPtr = buffer + sizeof(char) + (oldCount * sizeOfPair);
+  char* leftPtr = rightPtr - sizeOfPair;
+
+  // curNum is set to the pair number of the second-to-last pair
+  int curNum = oldCount - 1;
+  int curKey;
+
+  // Move each pair one position to the right until we reach a pair
+  // that has a key value smaller than the to-be-inserted pair's key value,
+  // or until there are no more pairs
+  while (true) {
+    // If curNum is less than 0, then we there is no key in this node
+    // that is less than the to-be-inserted pair's key; break
+    if (curNum < 0) {
+      break;
+    }
+
+    // Set curKey to the key of the pair pointed to by leftPtr
+    memcpy(&curKey, leftPtr + sizeof(RecordId), sizeof(int));
+
+    // If curKey is less than key, then rightPtr points to the position
+    // where we should insert the pair; break
+    if (curKey < key) {
+      break;
+    }
+
+    // Otherwise, move this current pair one position to the right
+    memcpy(rightPtr, leftPtr, sizeOfPair);
+    
+    // Move both pointers left one position
+    // Decrement curNum
+    rightPtr = leftPtr;
+    leftPtr = rightPtr - sizeOfPair;
+    curNum--;
+  }
+
+  // rightPtr points to where we should insert the pair
+  memcpy(rightPtr, &rid, sizeof(RecordId));
+  memcpy(rightPtr + sizeof(RecordId), &key, sizeof(int));
+
+  // Increment this node's key count
+  int count = oldCount + 1;
+  memcpy(buffer + sizeof(char), &count, sizeof(int));
+  return 0;
+}
 
 /*
  * Insert the (key, rid) pair to the node
@@ -122,7 +179,22 @@ RC BTLeafNode::locate(int searchKey, int& eid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
-{ return 0; }
+{
+  if (eid < 0 || eid >= getKeyCount()) {
+    return RC_INVALID_ATTRIBUTE;
+  }
+
+  // Size of a (rid, key) pair
+  size_t sizeOfPair = sizeof(RecordId) + sizeof(int);
+
+  // Get pointer to the target pair
+  // Use memcpy to set rid and key to the values in the pair
+  char* pairPtr = buffer + sizeof(char) + (eid * sizeOfPair);
+  memcpy(&rid, pairPtr, sizeof(RecordId));
+  memcpy(&key, pairPtr + sizeof(RecordId), sizeof(int));
+
+  return 0;
+}
 
 /*
  * Return the pid of the next slibling node.
