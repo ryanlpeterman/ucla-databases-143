@@ -18,6 +18,18 @@
  */
 class BTLeafNode {
   public:
+
+    // number of (rid, key) pairs per node
+    static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - (2*sizeof(int)))/(sizeof(int) + sizeof(RecordId));
+      // Note that we subtract 1 and 2*sizeof(int) from PAGE_SIZE because the
+      // first byte in the page is a flag indicating that this is a Leaf node,
+      // the next four bytes are used to store the # of (rid, key) pairs in
+      // the page, and the last four bytes in the page are used to store the
+      // PageId of the next sibling node
+
+    BTLeafNode();
+    BTLeafNode(PageId pid, const PageFile& pf);
+
    /**
     * Insert the (key, rid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.

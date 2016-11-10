@@ -1,6 +1,29 @@
 #include "BTreeNode.h"
+#include <cstring>
 
 using namespace std;
+
+BTLeafNode::BTLeafNode()
+{
+  // Initialize Node with zeros
+  memset(buffer, 0, PageFile::PAGE_SIZE);
+
+  // Set Leaf flag
+  memset(buffer, 'l', sizeof(char));
+
+  // Set key count to 0
+  int temp = 0;
+  memcpy(buffer + sizeof(char), &temp, sizeof(int));
+
+  // Set next node pointer (PageId) to -1
+  temp = -1;
+  memcpy(buffer + (PageFile::PAGE_SIZE) - 1 - (sizeof(PageId)), &temp, sizeof(PageId));
+}
+
+BTLeafNode::BTLeafNode(PageId pid, const PageFile& pf)
+{
+  read(pid, pf);
+}
 
 /*
  * Read the content of the node from the page pid in the PageFile pf.
@@ -9,7 +32,17 @@ using namespace std;
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
-{ return 0; }
+{
+  RC rc;
+
+  // TODO: Error-checking? Out of bounds pid?
+
+  // read the page representing the node
+  if ((rc = pf.read(pid, buffer)) < 0) return rc;
+
+  return 0; 
+
+}
     
 /*
  * Write the content of the node to the page pid in the PageFile pf.
@@ -18,14 +51,31 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
-{ return 0; }
+{
+  RC rc;
+
+  // TODO: Error-checking? Out of bounds pid?
+
+  // write the page to the disk
+  if ((rc = pf.write(pid, buffer)) < 0) return rc;
+
+  return 0; 
+
+}
 
 /*
  * Return the number of keys stored in the node.
  * @return the number of keys in the node
  */
 int BTLeafNode::getKeyCount()
-{ return 0; }
+{
+  int count;
+
+  // The four bytes starting from the second byte of a page contains
+  // the # of (rid, key) pairs in the node
+  memcpy(&count, buffer + sizeof(char), sizeof(int));
+  return count;
+}
 
 /*
  * Insert a (key, rid) pair to the node.
@@ -79,7 +129,13 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
  * @return the PageId of the next sibling node 
  */
 PageId BTLeafNode::getNextNodePtr()
-{ return 0; }
+{
+  PageId nextNodePtr;
+
+  memcpy(&nextNodePtr, buffer + (PageFile::PAGE_SIZE) - 1 - (sizeof(PageId)), sizeof(PageId));
+
+  return nextNodePtr;
+}
 
 /*
  * Set the pid of the next slibling node.
@@ -87,7 +143,10 @@ PageId BTLeafNode::getNextNodePtr()
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::setNextNodePtr(PageId pid)
-{ return 0; }
+{
+  memcpy(buffer + (PageFile::PAGE_SIZE) - 1 - (sizeof(PageId)), &pid, sizeof(PageId));
+  return 0;
+}
 
 /*
  * Read the content of the node from the page pid in the PageFile pf.
