@@ -18,7 +18,7 @@
  */
 class BTLeafNode {
   public:
-
+    // TODO: Shouldn't this be only 1 int?
     // number of (rid, key) pairs per node
     static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - (2*sizeof(int)))/(sizeof(int) + sizeof(RecordId));
       // Note that we subtract 1 and 2*sizeof(int) from PAGE_SIZE because the
@@ -124,7 +124,19 @@ class BTLeafNode {
  */
 class BTNonLeafNode {
   public:
-   /**
+    // number of (pid, key) pairs per node
+    // TODO: shouldn't this be only one int subtracted?
+    static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - (2*sizeof(int)))/(sizeof(int) + sizeof(PageId));    
+    // Note that we subtract 1 and 2*sizeof(int) from PAGE_SIZE because the
+    // first byte in the page is a flag indicating that this is an internal node,
+    // the next four bytes are used to store the # of (pid, key) pairs in
+    // the page, and the last four bytes in the page are used to store the
+    // PageId of the final pointer
+   
+    BTNonLeafNode();
+    BTNonLeafNode(PageId pid, const PageFile& pf);
+
+  /**
     * Insert a (key, pid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
     * @param key[IN] the key to insert
@@ -132,8 +144,8 @@ class BTNonLeafNode {
     * @return 0 if successful. Return an error code if the node is full.
     */
     RC insert(int key, PageId pid);
-
-   /**
+   
+  /**
     * Insert the (key, pid) pair to the node
     * and split the node half and half with sibling.
     * The sibling node MUST be empty when this function is called.

@@ -15,6 +15,9 @@
 #include "Bruinbase.h"
 #include "SqlEngine.h"
 
+// student defined test suite
+#include "Test.h"
+
 using namespace std;
 
 // external functions and variables for load file and sql command parsing 
@@ -132,6 +135,13 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
+  // TODO: if table name is test we run our test suite
+  if (table == "test") {
+    Test* t = new Test();
+    t->beginTests();
+    return 0;
+  }  
+
   // conversion for type
   const char* loadfile_name = loadfile.c_str();
   RecordFile* rf_handle = new RecordFile();
