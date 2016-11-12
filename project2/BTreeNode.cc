@@ -432,8 +432,6 @@ RC BTNonLeafNode::insert(int key, PageId pid)
     return RC_NODE_FULL;
   }
 
-  // TODO: will this cause problems based on the size of pid being
-  // different form size of rid? Where is BTNonLeafNode constructed?
   size_t pair_size = sizeof(pid) + sizeof(int);
 
   // points to first empty position 
