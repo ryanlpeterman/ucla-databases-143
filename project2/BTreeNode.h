@@ -18,7 +18,6 @@
  */
 class BTLeafNode {
   public:
-    // TODO: Shouldn't this be only 1 int?
     // number of (rid, key) pairs per node
     static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - (2*sizeof(int)))/(sizeof(int) + sizeof(RecordId));
       // Note that we subtract 1 and 2*sizeof(int) from PAGE_SIZE because the
@@ -125,8 +124,7 @@ class BTLeafNode {
 class BTNonLeafNode {
   public:
     // number of (pid, key) pairs per node
-    // TODO: shouldn't this be only one int subtracted?
-    static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - (2*sizeof(int)))/(sizeof(int) + sizeof(PageId));    
+    static const int PAIRS_PER_NODE = (PageFile::PAGE_SIZE - 1 - sizeof(int))/(sizeof(int) + sizeof(PageId));    
     // Note that we subtract 1 and 2*sizeof(int) from PAGE_SIZE because the
     // first byte in the page is a flag indicating that this is an internal node,
     // the next four bytes are used to store the # of (pid, key) pairs in
@@ -135,6 +133,10 @@ class BTNonLeafNode {
    
     BTNonLeafNode();
     BTNonLeafNode(PageId pid, const PageFile& pf);
+
+    // expose state for the sake of testing
+    PageId getIthPid(int i);
+    int getIthKey(int i);
 
   /**
     * Insert a (key, pid) pair to the node.

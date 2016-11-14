@@ -1,4 +1,6 @@
 #include <iostream>
+#include <assert.h>
+
 #include "Test.h"
 using namespace std;
 
@@ -154,7 +156,6 @@ void Test::testLeafNode() {
   testInsert(leaf4, 7, 707, 707);
   testInsert(leaf4, 9, 909, 909);
   testInsert(leaf4, 11, 11011, 11011);
-
   testLocate(leaf4);
 
   cout << "\nNow, leaf4 has 6 pairs. If we isnert and split one pair, leaf4 should have 4 pairs, and the new sibling node should have 3 pairs.\n\nTrying with key value = 2, which should be inserted into the original node.\n\n";
@@ -162,9 +163,6 @@ void Test::testLeafNode() {
   BTLeafNode leaf4sibling;
   int leaf4siblingKey;
   testInsertAndSplit(leaf4, 2, 202, 202, leaf4sibling, leaf4siblingKey);
-
-
-
 
   cout << "\n==================================================\n\n";
   cout << "Another insertAndSplit test...\n\n";
@@ -184,8 +182,6 @@ void Test::testLeafNode() {
   int leaf5siblingKey;
   testInsertAndSplit(leaf5, 8, 808, 808, leaf5sibling, leaf5siblingKey);
 
-
-
   cout << "\n==================================================\n\n";
   cout << "Another insertAndSplit test...\n\n";
   BTLeafNode* leaf6 = new BTLeafNode();
@@ -204,8 +200,6 @@ void Test::testLeafNode() {
   int leaf6siblingKey;
   testInsertAndSplit(leaf6, 6, 606, 606, leaf6sibling, leaf6siblingKey);
 
-
-
   pf_handle->close();
   delete pf_handle;
   delete leaf;
@@ -214,8 +208,52 @@ void Test::testLeafNode() {
   delete leaf4;
   delete leaf5;
   delete leaf6;
+  cout << "All Leaf Test Cases Passed" << endl;
 }
 
 void Test::testNonLeafNode() {
-  cout << "TODO: testing Non Leaf Node Code" << endl;
+  PageFile* pf_handle = new PageFile();
+  pf_handle->open("internal_node.test", 'w');
+
+  // tests default constructor
+  BTNonLeafNode* node = new BTNonLeafNode();
+  assert(node->getKeyCount() == 0); 
+
+  // tests insertion and getKeyCount
+  PageId pid1 = 1;
+  PageId pid2 = 2;
+  assert(node->insert(1, pid1) == 0); 
+  assert(node->getKeyCount() == 1);
+  assert(node->insert(2, pid2) == 0);
+  assert(node->getIthPid(0) == 1 && node->getIthKey(0) == 1);
+  assert(node->getIthPid(1) == 2 && node->getIthKey(1) == 2);
+  
+  // tests initializeRoot
+  BTNonLeafNode* root = new BTNonLeafNode();
+  root->initializeRoot(1, 100, 2);
+  assert(root->getIthPid(0) == 1 && root->getIthPid(1) == 2);
+  assert(root->getIthKey(0) == 100);
+  
+  // tests locateChildPtr
+  PageId childPtr;
+  root->locateChildPtr(99, childPtr);
+  assert(childPtr == 1);
+  root->locateChildPtr(101, childPtr);
+  assert(childPtr == 2);
+  node->insert(100, pid2);
+  node->locateChildPtr(50, childPtr);
+  assert(childPtr == 2);
+
+  // tests insertAndSplit
+  BTNonLeafNode* test_sibling = new BTNonLeafNode();
+  int mid_key;
+  PageId pid3 = 3;
+  assert(node->insertAndSplit(3, pid3, *test_sibling, mid_key) == 0);
+  assert(node->getIthPid(0) == 1 && node->getIthKey(0) == 1);
+  assert(node->getIthPid(1) == 2 && node->getIthKey(1) == 2);
+  assert(mid_key == 2);
+  assert(test_sibling->getIthPid(0) == 3 && test_sibling->getIthKey(0) == 3);
+
+  pf_handle->close(); 
+  cout << "All Non-Leaf Test Cases Passed" << endl; 
 }
