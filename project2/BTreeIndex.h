@@ -34,6 +34,12 @@ typedef struct {
 class BTreeIndex {
  public:
   BTreeIndex();
+  BTreeIndex(const std::string& indexname, char mode);
+
+  // TODO: remove before submission
+  PageId getRootPid();
+  int getTreeHeight();
+  PageId getPfEndPid();
 
   /**
    * Open the index file in read or write mode.

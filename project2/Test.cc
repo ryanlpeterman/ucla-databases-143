@@ -5,8 +5,9 @@
 using namespace std;
 
 void Test::beginTests() {
-  testLeafNode();
-  testNonLeafNode();
+  //testLeafNode();
+  //testNonLeafNode();
+  testIndex();
 }
 
 void testPrint(BTLeafNode* leaf2) {
@@ -256,4 +257,24 @@ void Test::testNonLeafNode() {
 
   pf_handle->close(); 
   cout << "All Non-Leaf Test Cases Passed" << endl; 
+}
+
+void Test::testIndex() {
+  BTreeIndex* test1 = new BTreeIndex();
+  assert(test1->getPfEndPid() == 0);
+  assert(test1->getRootPid() == -1);
+  assert(test1->getTreeHeight() == -1);
+
+  BTreeIndex* test2 = new BTreeIndex("testindex", 'w');
+  assert(test2->getPfEndPid() == 1);
+  assert(test2->getRootPid() == 1);
+  assert(test2->getTreeHeight() == 0);
+  test2->close();
+
+  test1->open("testindex", 'w');
+  assert(test1->getRootPid() == 1);
+  assert(test1->getTreeHeight() == 0);
+  test1->close();
+
+  cout << "Passed all BTreeIndex test cases.\n";
 }

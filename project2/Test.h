@@ -2,6 +2,7 @@
 #define TEST_H
 
 #include "BTreeNode.h"
+#include "BTreeIndex.h"
 using namespace std;
 
 class Test {
@@ -11,6 +12,7 @@ class Test {
   private:
     void testLeafNode();
     void testNonLeafNode();
+    void testIndex();
 };
 
 
