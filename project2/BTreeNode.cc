@@ -386,7 +386,7 @@ RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
 {
   RC rc;
   // if error code, return it
-  if ((rc = pf.read(pid, buffer) < 0))
+  if ((rc = pf.read(pid, buffer)) < 0)
     return rc;
   
   return 0;  
