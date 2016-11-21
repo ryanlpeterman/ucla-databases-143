@@ -100,6 +100,8 @@ RC BTreeIndex::close()
   return pf.close();
 }
 
+// TODO: remove before submission
+#include <iostream>
 
 /*
     Args:
@@ -132,7 +134,7 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
         
         // insert key into node
         rc = leaf->insert(key, rid); 
-        
+ 
         // if node is full
         if (rc == RC_NODE_FULL) {
             PageId sibling_pid = pf.endPid();
@@ -147,7 +149,11 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
             // return to parent to handle key insertion
             ret_pair.pid = sibling_pid;
             ret_pair.eid = sibling_key;
-        }
+        } 
+        
+        // write out leaf changes 
+        leaf->write(pid, pf);
+
     // current node is non-leaf
     } else {
         BTNonLeafNode* node = new BTNonLeafNode(pid, pf);
@@ -159,7 +165,7 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
         // recursive call on child with key to insert
         ret_pair = rec_insert(key, rid, child);
         
-        // insertion needs split
+        // needs insertion into non-leaf node
         if (ret_pair.pid != -1) {
             // recursive call returned sibling key to insert to current node
             rc = node->insert(ret_pair.eid, ret_pair.pid);        
@@ -183,6 +189,9 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
             } else {
                 ret_pair.pid = -1;
             }
+
+            // write out node changes
+            node->write(pid, pf);
         }
     }
 

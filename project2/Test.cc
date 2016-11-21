@@ -276,19 +276,24 @@ void Test::testIndex() {
   assert(test1->getTreeHeight() == 0);
   test1->close();
 
-  BTreeIndex* test3 = new BTreeIndex();
+  BTreeIndex* test3 = new BTreeIndex("testindex", 'w');
   RecordId rid1;
   rid1.pid = 2;
   rid1.sid = 3;
   int key1 = 1;
   test3->insert(key1, rid1);
 
-  RecordId rid2;
-  rid2.pid = 4;
-  rid2.sid = 5;
-  int key2 = 6;
 
-  test3->insert(key2, rid2);
+  // Note: at 84 insertions we handle split case
+  // Note: at i >= 127 insertions in for loop we get segfault
+  for(int i = 0; i < 128; i++) {
+    RecordId* rid2 = new RecordId();
+    rid2->pid = i;
+    rid2->sid = i;
+    int key2 = i;
+    test3->insert(key2, *rid2);
+  }  
+
   cout << test3->getTreeHeight() << endl;
   cout << test3->getRootPid() << endl;
   cout << test3->getPfEndPid() << endl;
