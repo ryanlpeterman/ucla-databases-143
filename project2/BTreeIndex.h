@@ -55,7 +55,7 @@ class BTreeIndex {
    * @return error code. 0 if no error
    */
   RC close();
-    
+      
   /**
    * Insert (key, RecordId) pair to the index.
    * @param key[IN] the key for the value inserted into the index
@@ -95,6 +95,8 @@ class BTreeIndex {
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
   
  private:
+  // helper function for insertion
+  IndexCursor rec_insert(int key, const RecordId& rid, PageId pid);
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
 
   PageId   rootPid;    /// the PageId of the root node

@@ -100,6 +100,95 @@ RC BTreeIndex::close()
   return pf.close();
 }
 
+
+/*
+    Args:
+        int key - key to insert
+        RecordId& - rid to insert
+        PageId pid - page id of current node
+    Returns:
+        IndexCursor with -1 pid if insert successful
+        IndexCursor of new leaf if split happend to insert into parent
+*/
+IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
+    RC rc;
+    char page[PageFile::PAGE_SIZE]; 
+    char flag;
+
+    // TODO figure out how to communicate rc read errors 
+    //  return type issue
+    // if ((rc = pf.read(pid, page)) < 0) return rc;
+    pf.read(pid, page);
+    memcpy(&flag, page, sizeof(char));
+    
+    // return value
+    IndexCursor ret_pair;
+    // by default insert succeeded without split
+    ret_pair.pid = -1;
+
+    // if current node is a leaf
+    if (flag == 'l') {
+        BTLeafNode* leaf = new BTLeafNode(pid, pf);
+        
+        // insert key into node
+        rc = leaf->insert(key, rid); 
+        
+        // if node is full
+        if (rc == RC_NODE_FULL) {
+            PageId sibling_pid = pf.endPid();
+            BTLeafNode* sibling = new BTLeafNode();
+            int sibling_key;
+            
+            // insert key into leaf and split with new sibling leaf
+            leaf->insertAndSplit(key, rid, *sibling, sibling_key);
+            // write the sibling out based on the endPid()
+            sibling->write(sibling_pid, pf);            
+
+            // return to parent to handle key insertion
+            ret_pair.pid = sibling_pid;
+            ret_pair.eid = sibling_key;
+        }
+    // current node is non-leaf
+    } else {
+        BTNonLeafNode* node = new BTNonLeafNode(pid, pf);
+        PageId child;
+
+        // set pid to childPtr
+        rc = node->locateChildPtr(key, child);
+        
+        // recursive call on child with key to insert
+        ret_pair = rec_insert(key, rid, child);
+        
+        // insertion needs split
+        if (ret_pair.pid != -1) {
+            // recursive call returned sibling key to insert to current node
+            rc = node->insert(ret_pair.eid, ret_pair.pid);        
+            
+            // current node needs to be split as well
+            if (rc == RC_NODE_FULL) {
+                PageId sibling_pid = pf.endPid();
+                BTNonLeafNode* sibling = new BTNonLeafNode();
+                int sibling_key;
+
+                // insert key into node and split with new sibling
+                node->insertAndSplit(ret_pair.eid, ret_pair.pid, *sibling, sibling_key);
+                // write the sibling otu based on endPid()
+                sibling->write(sibling_pid, pf);
+
+                // return cursor to handle key parent insertion
+                ret_pair.pid = sibling_pid;
+                ret_pair.eid = sibling_key;
+            
+            // insertion into current non-leaf node did not require split
+            } else {
+                ret_pair.pid = -1;
+            }
+        }
+    }
+
+    return ret_pair;
+}
+
 /*
  * Insert (key, RecordId) pair to the index.
  * @param key[IN] the key for the value inserted into the index
@@ -108,6 +197,22 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
+    IndexCursor ret_pair = rec_insert(key, rid, rootPid);
+    
+    // must split root
+    if (ret_pair.pid != -1) {
+        PageId new_root_id = pf.endPid();
+        BTNonLeafNode* new_root = new BTNonLeafNode();
+
+        // init new root to contain old root and its sibling
+        new_root->initializeRoot(rootPid, ret_pair.eid, ret_pair.pid);
+
+        // write out new root
+        new_root->write(new_root_id, pf);
+        rootPid = new_root_id;
+        treeHeight++;
+    }
+    
     return 0;
 }
 
