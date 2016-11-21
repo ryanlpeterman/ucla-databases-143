@@ -19,7 +19,7 @@ using namespace std;
 BTreeIndex::BTreeIndex()
 {
     rootPid = -1;
-    treeHeight = -1;
+    treeHeight = 0;
 }
 
 BTreeIndex::BTreeIndex(const string& indexname, char mode)
@@ -197,6 +197,20 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
+    // empty tree
+    if (treeHeight == 0) {
+        PageId root_id = pf.endPid();
+        BTLeafNode* root = new BTLeafNode();
+
+        root->insert(key, rid);
+        root->write(root_id, pf);
+
+        // set index root and increment height
+        rootPid = root_id;
+        treeHeight++;
+        return 0;
+    }
+
     IndexCursor ret_pair = rec_insert(key, rid, rootPid);
     
     // must split root
