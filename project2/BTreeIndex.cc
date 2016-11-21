@@ -143,6 +143,8 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
             
             // insert key into leaf and split with new sibling leaf
             leaf->insertAndSplit(key, rid, *sibling, sibling_key);
+	    // update leaf's next node ptr
+	    leaf->setNextNodePtr(sibling_pid);
             // write the sibling out based on the endPid()
             sibling->write(sibling_pid, pf);            
 
