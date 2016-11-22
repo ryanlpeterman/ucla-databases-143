@@ -437,14 +437,14 @@ RC BTNonLeafNode::insert(int key, PageId pid)
 
   size_t pair_size = sizeof(pid) + sizeof(int);
 
-  // points to first empty position 
-  char* empty_ptr = buffer + sizeof(char) + sizeof(int) + (count * pair_size);
-  // points to first non_empty position
+  // points to first empty (key, ptr) position after first ptr
+  char* empty_ptr = buffer + sizeof(char) + sizeof(int) + (count * pair_size) + sizeof(PageId);
+  // points to first non_empty (key, ptr)
   char* nonempty_ptr = empty_ptr - pair_size; 
 
   // get key of non_empty_ptr
   int curr_key;
-  memcpy(&curr_key, nonempty_ptr + sizeof(pid), sizeof(int));
+  memcpy(&curr_key, nonempty_ptr, sizeof(int));
   
   // while the current key is less than our search key
   while (curr_key > key) {
@@ -452,7 +452,7 @@ RC BTNonLeafNode::insert(int key, PageId pid)
     memcpy(empty_ptr, nonempty_ptr, pair_size);   
 
     // at beginning of pairs
-    if (nonempty_ptr == (buffer + sizeof(char) + sizeof(int))) {
+    if (nonempty_ptr == (buffer + sizeof(char) + sizeof(int) + sizeof(PageId))) {
       empty_ptr = nonempty_ptr;
       break;
     }
@@ -462,17 +462,21 @@ RC BTNonLeafNode::insert(int key, PageId pid)
     nonempty_ptr = empty_ptr - pair_size;
        
     // update curr_key
-    memcpy(&curr_key, nonempty_ptr + sizeof(pid), sizeof(int));
+    memcpy(&curr_key, nonempty_ptr, sizeof(int));
   }
 
   // insert key into node
-  memcpy(empty_ptr, &pid, sizeof(PageId));
-  memcpy(empty_ptr + sizeof(PageId), &key, sizeof(int));
+  memcpy(empty_ptr, &key, sizeof(int));
+  memcpy(empty_ptr + sizeof(int), &pid, sizeof(PageId));
   
   // update key count
   int new_count = count + 1;
   memcpy(buffer + sizeof(char), &new_count, sizeof(int));
   return 0;
+}
+
+void BTNonLeafNode::setFirstPid(PageId pid) {
+    memcpy(buffer + sizeof(char) + sizeof(int), &pid, sizeof(PageId));
 }
 
 /*
@@ -495,10 +499,10 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 
   int count = getKeyCount();
   // number of pairs to move to sibling
-  int num_move_pairs = (count + 1)/2;
+  int num_move_pairs = count/2;
 
-  // points to last pair in current node
-  char* curr = buffer + sizeof(char) + sizeof(int) + ((count - 1) * pair_size);
+  // points to last (key, ptr) pair
+  char* curr = buffer + sizeof(char) + sizeof(int) + ((count - 1) * pair_size) + sizeof(pid);
   
   // temp variables
   int curr_key, new_count;  
@@ -507,8 +511,8 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 
   while (num_move_pairs > 0) {
     // copy pair into temps
-    memcpy(&curr_key, curr + sizeof(pid), sizeof(int));
-    memcpy(&curr_pid, curr, sizeof(pid));
+    memcpy(&curr_key, curr, sizeof(int));
+    memcpy(&curr_pid, curr + sizeof(int), sizeof(pid));
 
     // curr_key should be inserted in sibling
     if (curr_key > key || key_inserted) {
@@ -530,9 +534,26 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
     
     num_move_pairs--;
   }
-  
+
+  // if key not inserted into sibling
+  if (!key_inserted) {
+    // insert into this node
+    insert(key, pid);
+  }
+
+  PageId first_ptr;
+  // points to last pid
+  char* last_pid = buffer + sizeof(char) + sizeof(int) + (getKeyCount() * pair_size);
+  // firstptr of sibling is equal to last ptr of this node after insertion
+  memcpy(&first_ptr, last_pid, sizeof(PageId));
+  sibling.setFirstPid(first_ptr);
+
   // mid key is equal to the median of inserted keys (last key in curr node after split)
-  memcpy(&midKey, curr + sizeof(pid), sizeof(int));
+  memcpy(&midKey, curr, sizeof(int));
+  // decrement this nodes key count since midkey will be moved from this node to parent
+  new_count = getKeyCount() - 1;
+  memcpy(buffer + sizeof(char), &new_count, sizeof(int));
+
   return 0;
 }
 

@@ -10,7 +10,11 @@ Project 2a:
 Project 2b:
     - Implemented the BTreeNode and BTreeNonLeafNode classes
 
+Project 2c:
+    - Implemented the BTreeIndex class
+
 Work Split:
     - 50/50 - pair programmed the entire thing
     - 50/50 - we split up the work evenly and each finished implementing one class
+    - 50/50 - we split up the work evenly and implemented half the class each
     - Team dynamic is great right now

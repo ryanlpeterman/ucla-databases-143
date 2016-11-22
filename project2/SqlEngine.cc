@@ -17,7 +17,7 @@
 
 // TODO: comment out before submission
 // student defined test suite
-#include "Test.h"
+// #include "Test.h"
 
 using namespace std;
 
@@ -137,11 +137,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
   // TODO: comment out before submission
-  if (table == "test") {
-    Test* t = new Test();
-    t->beginTests();
-    return 0;
-  }  
+  // if (table == "test") {
+  //   Test* t = new Test();
+  //   t->beginTests();
+  //   return 0;
+  // }  
 
   // conversion for type
   const char* loadfile_name = loadfile.c_str();

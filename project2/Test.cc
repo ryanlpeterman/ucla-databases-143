@@ -283,17 +283,18 @@ void Test::testIndex() {
   int key1 = 1;
   test3->insert(key1, rid1);
 
-
-  // Note: at 84 insertions we handle split case
-  // Note: at i >= 127 insertions in for loop we get segfault
-  for(int i = 0; i < 128; i++) {
+  for(int i = 0; i < 40000; i++) {
     RecordId* rid2 = new RecordId();
     rid2->pid = i;
     rid2->sid = i;
     int key2 = i;
     test3->insert(key2, *rid2);
   }  
-
+  for(int i = 0; i < 5325; i++) {
+    IndexCursor* cur = new IndexCursor();
+    RC rc = test3->locate(i, *cur);
+    assert(rc != RC_NO_SUCH_RECORD);
+  }
   cout << test3->getTreeHeight() << endl;
   cout << test3->getRootPid() << endl;
   cout << test3->getPfEndPid() << endl;

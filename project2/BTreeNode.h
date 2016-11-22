@@ -138,6 +138,10 @@ class BTNonLeafNode {
     PageId getIthPid(int i);
     int getIthKey(int i);
 
+    // sets the first pointer of a node for use when initializing an empty sibling
+    // for insertAndSplit
+    void setFirstPid(PageId pid);    
+
   /**
     * Insert a (key, pid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.

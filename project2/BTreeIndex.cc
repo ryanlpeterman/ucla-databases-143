@@ -94,14 +94,20 @@ RC BTreeIndex::open(const string& indexname, char mode)
  */
 RC BTreeIndex::close()
 {
-  rootPid = -1;
-  treeHeight = -1;
+  RC rc;
+  char page[PageFile::PAGE_SIZE];
+
+  // Initialize page with zeros
+  memset(page, 0, PageFile::PAGE_SIZE);
+  // Save rootPid
+  memcpy(page, &rootPid, sizeof(PageId));
+  // Save treeHeight
+  memcpy(page + sizeof(PageId), &treeHeight, sizeof(int));
+  // Write to disk
+  if ((rc = pf.write(0, page)) < 0) return rc;
 
   return pf.close();
 }
-
-// TODO: remove before submission
-#include <iostream>
 
 /*
     Args:
@@ -143,8 +149,8 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
             
             // insert key into leaf and split with new sibling leaf
             leaf->insertAndSplit(key, rid, *sibling, sibling_key);
-	    // update leaf's next node ptr
-	    leaf->setNextNodePtr(sibling_pid);
+	        // update leaf's next node ptr
+	        leaf->setNextNodePtr(sibling_pid);
             // write the sibling out based on the endPid()
             sibling->write(sibling_pid, pf);            
 
