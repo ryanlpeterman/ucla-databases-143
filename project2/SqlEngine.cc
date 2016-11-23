@@ -14,6 +14,7 @@
 #include <fstream>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
+#include "BTreeIndex.h"
 
 // TODO: comment out before submission
 // student defined test suite
@@ -54,84 +55,119 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
     return rc;
   }
+ 
+  string idx_filename = table + ".idx"; 
+  ifstream idx_file(idx_filename.c_str()); // open idx file to check for existence
 
-  // scan the table file from the beginning
-  rid.pid = rid.sid = 0;
-  count = 0;
-  while (rid < rf.endRid()) {
-    // read the tuple
-    if ((rc = rf.read(rid, key, value)) < 0) {
-      fprintf(stderr, "Error: while reading a tuple from table %s\n", table.c_str());
-      goto exit_select;
+  // if idx exists
+  if (idx_file.good()) {
+    // close to release file handle
+    idx_file.close();
+
+    // open index
+    BTreeIndex idx(table + ".idx", 'r');
+
+    int num_cond = cond.size();
+   
+    // implicitly inclusive (convert exclusives when processing)
+    int upper_key, lower_key;
+    vector<int> not_equals_keys; 
+    bool upper_set = false, lower_set = false;
+
+    // preprocess conditions
+    for (int i = 0;i < num_cond; i++) {
+        // if key
+            // reduce all ranges down to two conditions
+            // ensure only one equals
+            // keep all not equals in a vector of conditions
+
+        // else value 
+            // reduce all ranges down to two conditions
+            // ensure only one equals
+            // keep all not equals in a vector of conditions
     }
 
-    // check the conditions on the tuple
-    for (unsigned i = 0; i < cond.size(); i++) {
-      // compute the difference between the tuple value and the condition value
-      switch (cond[i].attr) {
-      case 1:
-	diff = key - atoi(cond[i].value);
-	break;
-      case 2:
-	diff = strcmp(value.c_str(), cond[i].value);
-	break;
+  // no index
+  } else {
+
+    // scan the table file from the beginning
+    rid.pid = rid.sid = 0;
+    count = 0;
+    while (rid < rf.endRid()) {
+      // read the tuple
+      if ((rc = rf.read(rid, key, value)) < 0) {
+        fprintf(stderr, "Error: while reading a tuple from table %s\n", table.c_str());
+        goto exit_select;
       }
 
-      // skip the tuple if any condition is not met
-      switch (cond[i].comp) {
-      case SelCond::EQ:
-	if (diff != 0) goto next_tuple;
-	break;
-      case SelCond::NE:
-	if (diff == 0) goto next_tuple;
-	break;
-      case SelCond::GT:
-	if (diff <= 0) goto next_tuple;
-	break;
-      case SelCond::LT:
-	if (diff >= 0) goto next_tuple;
-	break;
-      case SelCond::GE:
-	if (diff < 0) goto next_tuple;
-	break;
-      case SelCond::LE:
-	if (diff > 0) goto next_tuple;
-	break;
+      // check the conditions on the tuple
+      for (unsigned i = 0; i < cond.size(); i++) {
+        // compute the difference between the tuple value and the condition value
+        switch (cond[i].attr) {
+        case 1:
+      diff = key - atoi(cond[i].value);
+      break;
+        case 2:
+      diff = strcmp(value.c_str(), cond[i].value);
+      break;
+        }
+
+        // skip the tuple if any condition is not met
+        switch (cond[i].comp) {
+        case SelCond::EQ:
+      if (diff != 0) goto next_tuple;
+      break;
+        case SelCond::NE:
+      if (diff == 0) goto next_tuple;
+      break;
+        case SelCond::GT:
+      if (diff <= 0) goto next_tuple;
+      break;
+        case SelCond::LT:
+      if (diff >= 0) goto next_tuple;
+      break;
+        case SelCond::GE:
+      if (diff < 0) goto next_tuple;
+      break;
+        case SelCond::LE:
+      if (diff > 0) goto next_tuple;
+      break;
+        }
       }
+
+      // the condition is met for the tuple. 
+      // increase matching tuple counter
+      count++;
+
+      // print the tuple 
+      switch (attr) {
+      case 1:  // SELECT key
+        fprintf(stdout, "%d\n", key);
+        break;
+      case 2:  // SELECT value
+        fprintf(stdout, "%s\n", value.c_str());
+        break;
+      case 3:  // SELECT *
+        fprintf(stdout, "%d '%s'\n", key, value.c_str());
+        break;
+      }
+
+      // move to the next tuple
+      next_tuple:
+      ++rid;
     }
 
-    // the condition is met for the tuple. 
-    // increase matching tuple counter
-    count++;
-
-    // print the tuple 
-    switch (attr) {
-    case 1:  // SELECT key
-      fprintf(stdout, "%d\n", key);
-      break;
-    case 2:  // SELECT value
-      fprintf(stdout, "%s\n", value.c_str());
-      break;
-    case 3:  // SELECT *
-      fprintf(stdout, "%d '%s'\n", key, value.c_str());
-      break;
+    // print matching tuple count if "select count(*)"
+    if (attr == 4) {
+      fprintf(stdout, "%d\n", count);
     }
+    rc = 0;
 
-    // move to the next tuple
-    next_tuple:
-    ++rid;
+    // close the table file and return
+    exit_select:
+    rf.close();
+    return rc;
   }
-
-  // print matching tuple count if "select count(*)"
-  if (attr == 4) {
-    fprintf(stdout, "%d\n", count);
-  }
-  rc = 0;
-
-  // close the table file and return
-  exit_select:
-  rf.close();
-  return rc;
 }
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
@@ -145,29 +181,49 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 
   // conversion for type
   const char* loadfile_name = loadfile.c_str();
-  RecordFile* rf_handle = new RecordFile();
+  RecordFile rf_handle;
  
   // create file named table.tbl 
-  rf_handle->open(table + ".tbl", 'w');
+  rf_handle.open(table + ".tbl", 'w');
 
   // fill in table.tbl with each line of load file interpreted as a tuple
   // store using the RecordFile api
   ifstream infile (loadfile_name);
-
+  
   int key;
   string value;
   RecordId rid;
+  
+  if (index) {
+    // initialize index
+    BTreeIndex bindex(table + ".idx", 'w'); 
+    // for every line in file
+    for (string line; getline(infile, line);) {
+      // get key, value, rid
+      parseLoadLine(line, key, value);
+      rid = rf_handle.endRid();
 
-  // for every line in file
-  for (string line; getline(infile, line);) {
-    parseLoadLine(line, key, value);
-    rid = rf_handle->endRid();
+      rf_handle.append(key, value, rid);  
+      
+      // insert the key,rid into index
+      bindex.insert(key, rid);  
+    }
 
-    rf_handle->append(key, value, rid);  
+    bindex.close();
+
+  // no index
+  } else {
+    // for every line in file
+    for (string line; getline(infile, line);) {
+      // get key, value, rid
+      parseLoadLine(line, key, value);
+      rid = rf_handle.endRid();
+
+      rf_handle.append(key, value, rid);  
+    }
   }
 
-  rf_handle->close();
-  delete rf_handle;
+  rf_handle.close();
   return 0;
 }
 

@@ -1,5 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include <assert.h>
+#include <cstring>
+#include "RecordFile.h"
+#include "SqlEngine.h"
 
 #include "Test.h"
 using namespace std;
@@ -277,6 +281,29 @@ void Test::testIndex() {
   test1->close();
 
   BTreeIndex* test3 = new BTreeIndex("testindex", 'w');
+  // assumes movie.idx already loaded
+  BTreeIndex* test_movie = new BTreeIndex("movie.idx", 'w');
+  
+  SqlEngine sql;
+  string loadfile_name = "movie.del";
+  ifstream infile (loadfile_name.c_str());
+  int key, record_key;
+  string value, record_value;
+  RecordId rid;
+  RecordFile* rf = new RecordFile();
+  rf->open("movie.tbl", 'w');
+  IndexCursor* cur = new IndexCursor();
+  
+  for(string line; getline(infile, line);) {
+    sql.parseLoadLine(line, key, value);
+
+    test_movie->locate(key, *cur);
+
+    test_movie->readForward(*cur, record_key, rid); 
+    rf->read(rid, record_key, record_value);
+     
+    assert(key == record_key && value == record_value);
+  }
 
   for(int i = 0; i < 100000; i++) {
     RecordId* rid2 = new RecordId();
@@ -307,6 +334,6 @@ void Test::testIndex() {
   }
   // height of 3 with branching factor 126
   assert(test3->getTreeHeight() == 3);
-
+  
   cout << "Passed all BTreeIndex test cases.\n";
 }
