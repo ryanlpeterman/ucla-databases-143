@@ -277,27 +277,36 @@ void Test::testIndex() {
   test1->close();
 
   BTreeIndex* test3 = new BTreeIndex("testindex", 'w');
-  RecordId rid1;
-  rid1.pid = 2;
-  rid1.sid = 3;
-  int key1 = 1;
-  test3->insert(key1, rid1);
 
-  for(int i = 0; i < 40000; i++) {
+  for(int i = 0; i < 100000; i++) {
     RecordId* rid2 = new RecordId();
     rid2->pid = i;
     rid2->sid = i;
     int key2 = i;
     test3->insert(key2, *rid2);
   }  
-  for(int i = 0; i < 5325; i++) {
+  // tests for membership
+  for(int i = 0; i < 100000; i++) {
     IndexCursor* cur = new IndexCursor();
     RC rc = test3->locate(i, *cur);
     assert(rc != RC_NO_SUCH_RECORD);
   }
-  cout << test3->getTreeHeight() << endl;
-  cout << test3->getRootPid() << endl;
-  cout << test3->getPfEndPid() << endl;
+
+  // tests for nonmembership
+  for(int i = -1000; i < 0; i++) {
+    IndexCursor* cur = new IndexCursor();
+    RC rc = test3->locate(i, *cur);
+    assert(rc == RC_NO_SUCH_RECORD);
+  }
+
+  // tests for nonmembership 
+  for(int i = 100000; i < 200000; i++) {
+    IndexCursor* cur = new IndexCursor();
+    RC rc = test3->locate(i, *cur);
+    assert(rc == RC_NO_SUCH_RECORD);
+  }
+  // height of 3 with branching factor 126
+  assert(test3->getTreeHeight() == 3);
 
   cout << "Passed all BTreeIndex test cases.\n";
 }

@@ -583,8 +583,9 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
     memcpy(&pid, curr_ptr, sizeof(pid));
     return 0;
   }  
-
-  while (curr_ptr != end) {
+  
+  // while curr_ptr does not point to last (pid, key) pair
+  while (curr_ptr != (end - pair_size)) {
     // if search key between two current keys
     if (curr_key <= searchKey && searchKey < next_key) {
       memcpy(&pid, curr_ptr + pair_size, sizeof(pid));
@@ -596,14 +597,10 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
     memcpy(&curr_key, curr_ptr + sizeof(pid), sizeof(int));
     memcpy(&next_key, curr_ptr + sizeof(pid) + pair_size, sizeof(int));
   }
-   
-  if (searchKey > next_key) {
-    memcpy(&pid, end, sizeof(pid));
-    return 0;
-  }
 
-  // locate child ptr failed (shouldn't be possible to get here)
-  return -1;
+  // searchKey was larger than all keys
+  memcpy(&pid, end, sizeof(pid));
+  return 0;
 }
 
 /*
