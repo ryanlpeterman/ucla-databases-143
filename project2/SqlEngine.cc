@@ -16,11 +16,10 @@
 #include "SqlEngine.h"
 #include "BTreeIndex.h"
 #include <limits.h>
-#include <algorithm>
+#include <set>
 
-// TODO: comment out before submission
 // student defined test suite
-#include "Test.h"
+// #include "Test.h"
 
 using namespace std;
 
@@ -50,7 +49,7 @@ class VC {
     string e_upper; 
     string e_lower; 
     string equals;
-    vector<string> not_equals;
+    set<string> not_equals;
     bool i_upper_set;
     bool i_lower_set;
     bool e_upper_set;
@@ -81,7 +80,7 @@ bool check_value(const RecordId& rid, const VC& vc, const RecordFile& rf, string
   if (vc.i_lower_set && strcmp(val.c_str(), (vc.i_lower).c_str()) < 0) {
     return false;
   }
-  if (find((vc.not_equals).begin(), (vc.not_equals).end(), val) != (vc.not_equals).end()) {
+  if ((vc.not_equals).find(val) != (vc.not_equals).end()) {
     return false;
   }
 
@@ -104,7 +103,7 @@ void query_print(const int& attr, int key, const RecordId& rid, const RecordFile
   } else if (attr == 2 || attr == 3) {
       rc = rf.read(rid, key, val);
       if (rc != 0) {
-        cout << "error when reading value" << endl;
+        // cout << "error when reading value" << endl;
         return;
       }
   }
@@ -147,7 +146,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   
   // implicitly inclusive (convert exclusives when processing)
   int upper_key, lower_key, equals_key;
-  vector<int> not_equals_keys; 
+  set<int> not_equals_keys; 
 
   bool upper_key_set = false, lower_key_set = false, equals_key_set = false;
   // value constraints struct zero'd out
@@ -163,12 +162,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
         // reduce all ranges down to two conditions
         // ensure only one equals
         // keep all not equals in a vector of conditions
-    if (cond[i].attr == 1) {
+    if (cond[i].attr == 1) {   
   switch(cond[i].comp) {
   case SelCond::EQ:
     // equals_key is already set
     if (equals_key_set) {
-      // TODO: assumes that cond[i].value is a valid string repr of an int
       // If two differing equals keys, then result is empty set
       if (equals_key != atoi(cond[i].value)) {
         empty_set = true;
@@ -183,8 +181,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     break;
   case SelCond::NE:
     // add to not_equals_keys vector
-    // TODO: convert this to a set for O(1) membership lookup
-    not_equals_keys.push_back(atoi(cond[i].value));
+    not_equals_keys.insert(atoi(cond[i].value));
     break;
   case SelCond::LT:
     // upper_key is already set
@@ -274,7 +271,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     break;
   case SelCond::NE:
     // add to not_equals_values vector
-    vc.not_equals.push_back(cond[i].value);
+    vc.not_equals.insert(cond[i].value);
     break;
   case SelCond::LT:
     // e_upper_value is already set
@@ -359,20 +356,20 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     empty_set = true;
   } else if (vc.i_upper_set && vc.i_lower_set && strcmp(vc.i_upper.c_str(), vc.i_lower.c_str()) < 0) {
     empty_set = true;
-  } else if (equals_key_set && find(not_equals_keys.begin(), not_equals_keys.end(), equals_key) != not_equals_keys.end()) {
+  } else if (equals_key_set && not_equals_keys.find(equals_key) != not_equals_keys.end()) {
     empty_set = true;
-  } else if (vc.equals_set && find(vc.not_equals.begin(), vc.not_equals.end(), vc.equals) != vc.not_equals.end()) {
+  } else if (vc.equals_set && (vc.not_equals).find(vc.equals) != (vc.not_equals).end()) {
     empty_set = true;
   }
 
 
   // if empty set...
   if (empty_set) {
-    cout << "REMOVE THIS BEFORE SUBMISSION\nEmpty set, return 0 automatically\n";
+    // cout << "REMOVE THIS BEFORE SUBMISSION\nEmpty set, return 0 automatically\n";
     return 0;
   }
-  // if idx exists and there are any conditions on the key
-  if (idx_file.good() && (upper_key_set || lower_key_set || equals_key_set || !not_equals_keys.empty())) {
+  // if idx exists and there are any conditions on the key or count(*) or key
+  if (idx_file.good() && (attr == 1 || attr == 4 || upper_key_set || lower_key_set || equals_key_set || !not_equals_keys.empty())) {
     // close to release file handle
     idx_file.close();
 
@@ -394,14 +391,14 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       rc = idx.locate(equals_key, cursor); 
  
       if (rc != 0) {
-        cout << "equals locate error/not found" << endl;
+        // cout << "equals locate error/not found" << endl;
         return 0;
       } 
 
       rc = idx.readForward(cursor, curr_key, curr_rid);
  
       if (rc != 0) {
-        cout << "read forward error" << endl;
+        // cout << "read forward error" << endl;
         return 0;
       }
        
@@ -421,7 +418,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       rc = idx.readForward(cursor, curr_key, curr_rid);         
  
       if (rc != 0) {
-        cout << "readForward error/empty set?" << endl;
+        // cout << "readForward error/empty set?" << endl;
         rf.close();
         idx.close();
         return rc;
@@ -430,7 +427,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       // while curr_key is within bounds
       while (curr_key <= upper_key) {
       // if curr_key is not part of not_equals_keys then we print it  
-      if (find(not_equals_keys.begin(), not_equals_keys.end(), curr_key) == not_equals_keys.end()) {
+      if (not_equals_keys.find(curr_key) == not_equals_keys.end()) {
           // print checked key
           query_print(attr, curr_key, curr_rid, rf, count, vc);
         }
@@ -438,15 +435,20 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
         rc = idx.readForward(cursor, curr_key, curr_rid);         
         
         if (rc == RC_END_OF_TREE) {
-          cout << "Done!" << endl;
+          // cout << "Done!" << endl;
           break;
         }
 
         if (rc != 0) {
-          cout << "read forward error" << endl;
+          // cout << "read forward error" << endl;
           break;
         } 
       }
+    }
+
+    // COUNT(*) query
+    if (attr == 4) {
+      cout << count << endl;
     }
 
     rf.close();
@@ -544,12 +546,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-  // TODO: comment out before submission
-  if (table == "test") {
-    Test* t = new Test();
-    t->beginTests();
-    return 0;
-  }  
+  // if (table == "test") {
+  //   Test* t = new Test();
+  //   t->beginTests();
+  //   return 0;
+  // }  
 
   // conversion for type
   const char* loadfile_name = loadfile.c_str();
