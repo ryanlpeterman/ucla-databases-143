@@ -349,10 +349,6 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 
   delete leaf_node;
   
-  // no nextNodePtr
-  if (cursor.pid == -1) {
-    return RC_END_OF_TREE;
-  }
 
   return 0;
 }
