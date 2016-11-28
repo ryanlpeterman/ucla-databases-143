@@ -27,7 +27,6 @@ BTreeIndex::BTreeIndex(const string& indexname, char mode)
   open(indexname, mode);
 }
 
-// TODO: remove before submission
 PageId BTreeIndex::getRootPid() {
   return rootPid;
 }
@@ -123,9 +122,6 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
     char page[PageFile::PAGE_SIZE]; 
     char flag;
 
-    // TODO figure out how to communicate rc read errors 
-    //  return type issue
-    // if ((rc = pf.read(pid, page)) < 0) return rc;
     pf.read(pid, page);
     memcpy(&flag, page, sizeof(char));
     
@@ -146,13 +142,18 @@ IndexCursor BTreeIndex::rec_insert(int key, const RecordId& rid, PageId pid) {
             PageId sibling_pid = pf.endPid();
             BTLeafNode* sibling = new BTLeafNode();
             int sibling_key;
+
+            PageId old_next = leaf->getNextNodePtr();
             
             // insert key into leaf and split with new sibling leaf
             leaf->insertAndSplit(key, rid, *sibling, sibling_key);
 	        // update leaf's next node ptr
 	        leaf->setNextNodePtr(sibling_pid);
+            sibling->setNextNodePtr(old_next);
             // write the sibling out based on the endPid()
-            sibling->write(sibling_pid, pf);            
+            sibling->write(sibling_pid, pf);  
+
+          
 
             // return to parent to handle key insertion
             ret_pair.pid = sibling_pid;

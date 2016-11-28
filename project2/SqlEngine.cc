@@ -16,7 +16,7 @@
 #include "SqlEngine.h"
 #include "BTreeIndex.h"
 #include <limits.h>
-
+#include <algorithm>
 
 // TODO: comment out before submission
 // student defined test suite
@@ -41,11 +41,73 @@ RC SqlEngine::run(FILE* commandline)
   return 0;
 }
 
-// TODO: pass the count in by reference here too
-// TODO: add value bounds checking to this print function
-void query_print(int attr, int key, RecordId rid, RecordFile& rf) {
+// struct containing all value constraints
+class VC {
+  public:
+    VC():i_upper_set(false), i_lower_set(false), e_upper_set(false), e_lower_set(false), equals_set(false) {};
+    string i_upper;
+    string i_lower;
+    string e_upper; 
+    string e_lower; 
+    string equals;
+    vector<string> not_equals;
+    bool i_upper_set;
+    bool i_lower_set;
+    bool e_upper_set;
+    bool e_lower_set; 
+    bool equals_set;
+};
+
+// reads in the value at rid and checks if it satisfies the value constraints
+bool check_value(const RecordId& rid, const VC& vc, const RecordFile& rf, string& val) {
+  int key;
+  
+  // reads rid to get string
+  rf.read(rid, key, val);
+
+  // checks string against the constraints
+  if (vc.equals_set && strcmp(val.c_str(), (vc.equals).c_str()) != 0) {
+    return false;
+  }
+  if (vc.e_upper_set && strcmp(val.c_str(), (vc.e_upper).c_str()) >= 0) {
+    return false;
+  }
+  if (vc.e_lower_set && strcmp(val.c_str(), (vc.e_lower).c_str()) <= 0) {
+    return false;
+  }
+  if (vc.i_upper_set && strcmp(val.c_str(), (vc.i_upper).c_str()) > 0) {
+    return false;
+  }
+  if (vc.i_lower_set && strcmp(val.c_str(), (vc.i_lower).c_str()) < 0) {
+    return false;
+  }
+  if (find((vc.not_equals).begin(), (vc.not_equals).end(), val) != (vc.not_equals).end()) {
+    return false;
+  }
+
+  return true;
+}
+
+void query_print(const int& attr, int key, const RecordId& rid, const RecordFile& rf, int& count, const VC& vc) {
+  
   string val;
   RC rc;
+  
+  // if there are value restrictions
+  if (vc.i_upper_set || vc.i_lower_set || vc.e_upper_set || vc.e_lower_set || vc.equals_set || !vc.not_equals.empty()) {
+    // get the string from this too so we don't need to do multiple reads
+    if(!check_value(rid, vc, rf, val)) {
+      return;
+    }
+
+  // no value restrictions but we need val to be read in
+  } else if (attr == 2 || attr == 3) {
+      rc = rf.read(rid, key, val);
+      if (rc != 0) {
+        cout << "error when reading value" << endl;
+        return;
+      }
+  }
 
   // Based on the case given by attr, we print the key/value
   switch (attr) {
@@ -55,23 +117,14 @@ void query_print(int attr, int key, RecordId rid, RecordFile& rf) {
       break;
     // value
     case 2:
-      rc = rf.read(rid, key, val);
-
-      if (rc != 0) {
-        cout << "error when printing case2" << endl;
-      } else {
-        cout << val << endl;
-      }
+      cout << val << endl;
       break;
     // *
     case 3:
-      rc = rf.read(rid, key, val);
-
-      if (rc != 0) {
-        cout << "error when printing case3" << endl;
-      } else {
-        cout << key << " '" << val << "'" << endl;
-      }
+      cout << key << " '" << val << "'" << endl;
+      break;
+    case 4:
+      count++;
       break;
   }
 }
@@ -96,12 +149,10 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   int upper_key, lower_key, equals_key;
   vector<int> not_equals_keys; 
 
-  string i_upper_value, i_lower_value, e_upper_value, e_lower_value, equals_value;
-  vector<string> not_equals_values;
-
   bool upper_key_set = false, lower_key_set = false, equals_key_set = false;
-  bool i_upper_value_set = false, i_lower_value_set = false, e_upper_value_set = false, e_lower_value_set = false, equals_value_set = false;
-  
+  // value constraints struct zero'd out
+  VC vc;
+ 
   // early termination set flag
   bool empty_set = false;
 
@@ -208,81 +259,81 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   switch(cond[i].comp) {
   case SelCond::EQ:
     // equals_value is already set
-    if (equals_value_set) {
+    if (vc.equals_set) {
       // If two differing equals values, then result is empty set
-      if (equals_value != cond[i].value) {
+      if (vc.equals != cond[i].value) {
         empty_set = true;
       }
 
     // else (first equals condition)
     } else {
       // Set equals_value and equals_value_set
-      equals_value = cond[i].value;
-      equals_value_set = true;
+      vc.equals = cond[i].value;
+      vc.equals_set = true;
     }
     break;
   case SelCond::NE:
     // add to not_equals_values vector
-    not_equals_values.push_back(cond[i].value);
+    vc.not_equals.push_back(cond[i].value);
     break;
   case SelCond::LT:
     // e_upper_value is already set
-    if (e_upper_value_set) {
+    if (vc.e_upper_set) {
       // If more restricted range, then update e_upper_value
-      if (strcmp(cond[i].value, e_upper_value.c_str()) < 0) {
-        e_upper_value = cond[i].value;
+      if (strcmp(cond[i].value, vc.e_upper.c_str()) < 0) {
+        vc.e_upper = cond[i].value;
       }
 
     // else (first < condition)
     } else {
       // Set e_upper_value and e_upper_value_set
-      e_upper_value = cond[i].value;
-      e_upper_value_set = true;	    
+      vc.e_upper = cond[i].value;
+      vc.e_upper_set = true;	    
     }
     break;
   case SelCond::GT:
     // e_lower_value is already set
-    if (e_lower_value_set) {
+    if (vc.e_lower_set) {
       // If more restricted range, then update e_lower_value
-      if (strcmp(cond[i].value, e_lower_value.c_str()) > 0) {
-        e_lower_value = cond[i].value;
+      if (strcmp(cond[i].value, vc.e_lower.c_str()) > 0) {
+        vc.e_lower = cond[i].value;
       }
 
     // else (first > condition)
     } else {
       // Set e_lower_value and e_lower_value_set
-      e_lower_value = cond[i].value;
-      e_lower_value_set = true;
+      vc.e_lower = cond[i].value;
+      vc.e_lower_set = true;
     }
     break;
   case SelCond::LE:
     // i_upper_value is already set
-    if (i_upper_value_set) {
+    if (vc.i_upper_set) {
       // If more restricted range, then update i_upper_value
-      if (strcmp(cond[i].value, i_upper_value.c_str()) < 0) {
-        i_upper_value = cond[i].value;
+      if (strcmp(cond[i].value, vc.i_upper.c_str()) < 0) {
+        vc.i_upper = cond[i].value;
       }
 
     // else (first <= condition)
     } else {
       // Set i_upper_value and i_upper_value_set
-      i_upper_value = cond[i].value;
-      i_upper_value_set = true;
+      vc.i_upper = cond[i].value;
+      vc.i_upper_set = true;
     }
     break;
   case SelCond::GE:
     // i_lower_value is already set
-    if (i_lower_value_set) {
+    if (vc.i_lower_set) {
       // If more restricted range, then update i_lower_value
-      if (strcmp(cond[i].value, i_lower_value.c_str()) > 0) {
-        i_lower_value = cond[i].value;
+      if (strcmp(cond[i].value, vc.i_lower.c_str()) > 0) {
+        vc.i_lower = cond[i].value;
       }
 
     // else (first >= condition)
     } else {
       // Set i_lower_value and i_lower_value_set
-      i_lower_value = cond[i].value;
-      i_lower_value_set = true;
+      vc.i_lower = cond[i].value;
+      vc.i_lower_set = true;
     }
     break;
   }
@@ -290,27 +341,29 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   }
 
   // check ranges - like if > and < mismatch, etc.
-  // TODO: explicit boundaries ... check w/ Ryan
   if (equals_key_set && upper_key_set && equals_key > upper_key) {
     empty_set = true;
   } else if (equals_key_set && lower_key_set && equals_key < lower_key) {
     empty_set = true;
   } else if (upper_key_set && lower_key_set && upper_key < lower_key) {
     empty_set = true;
-  } else if (equals_value_set && e_upper_value_set && strcmp(equals_value.c_str(), e_upper_value.c_str()) >= 0) {
+  } else if (vc.equals_set && vc.e_upper_set && strcmp(vc.equals.c_str(), vc.e_upper.c_str()) >= 0) {
     empty_set = true;
-  } else if (equals_value_set && e_lower_value_set && strcmp(equals_value.c_str(), e_lower_value.c_str()) <= 0) {
+  } else if (vc.equals_set && vc.e_lower_set && strcmp(vc.equals.c_str(), vc.e_lower.c_str()) <= 0) {
     empty_set = true;
-  } else if (equals_value_set && i_upper_value_set && strcmp(equals_value.c_str(), i_upper_value.c_str()) > 0) {
+  } else if (vc.equals_set && vc.i_upper_set && strcmp(vc.equals.c_str(), vc.i_upper.c_str()) > 0) {
     empty_set = true;
-  } else if (equals_value_set && i_lower_value_set && strcmp(equals_value.c_str(), i_lower_value.c_str()) < 0) {
+  } else if (vc.equals_set && vc.i_lower_set && strcmp(vc.equals.c_str(), vc.i_lower.c_str()) < 0) {
     empty_set = true;
-  } else if (e_upper_value_set && e_lower_value_set && strcmp(e_upper_value.c_str(), e_lower_value.c_str()) <= 0) {
+  } else if (vc.e_upper_set && vc.e_lower_set && strcmp(vc.e_upper.c_str(), vc.e_lower.c_str()) <= 0) {
     empty_set = true;
-  } else if (i_upper_value_set && i_lower_value_set && strcmp(i_upper_value.c_str(), i_lower_value.c_str()) < 0) {
+  } else if (vc.i_upper_set && vc.i_lower_set && strcmp(vc.i_upper.c_str(), vc.i_lower.c_str()) < 0) {
+    empty_set = true;
+  } else if (equals_key_set && find(not_equals_keys.begin(), not_equals_keys.end(), equals_key) != not_equals_keys.end()) {
+    empty_set = true;
+  } else if (vc.equals_set && find(vc.not_equals.begin(), vc.not_equals.end(), vc.equals) != vc.not_equals.end()) {
     empty_set = true;
   }
-  // TODO: check that equals key is not equal to any of the not equals keys for an empty set
 
 
   // if empty set...
@@ -319,7 +372,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     return 0;
   }
   // if idx exists and there are any conditions on the key
-  if (idx_file.good() && (upper_key_set || lower_key_set || equals_key_set || !not_equals_values.empty())) {
+  if (idx_file.good() && (upper_key_set || lower_key_set || equals_key_set || !not_equals_keys.empty())) {
     // close to release file handle
     idx_file.close();
 
@@ -352,13 +405,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
         return 0;
       }
        
-      // TODO: print out formatting
-      if (attr == 4) {
-        cout << "count == 1" << endl;
-      } else {
-        // TODO: fix with value bounds check pass
-        query_print(attr, curr_key, curr_rid, rf);
-      }
+      query_print(attr, curr_key, curr_rid, rf, count, vc);
 
     // range query
     } else { 
@@ -382,9 +429,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
  
       // while curr_key is within bounds
       while (curr_key <= upper_key) {
-        // print checked key TODO: alter this to new impl
-        query_print(attr, curr_key, curr_rid, rf);
-
+      // if curr_key is not part of not_equals_keys then we print it  
+      if (find(not_equals_keys.begin(), not_equals_keys.end(), curr_key) == not_equals_keys.end()) {
+          // print checked key
+          query_print(attr, curr_key, curr_rid, rf, count, vc);
+        }
         // read next
         rc = idx.readForward(cursor, curr_key, curr_rid);         
         
