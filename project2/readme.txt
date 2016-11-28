@@ -13,8 +13,12 @@ Project 2b:
 Project 2c:
     - Implemented the BTreeIndex class
 
+Project 2d:
+    - Implemented the SqlEngine load and select using the BTree Index
+
 Work Split:
     - 50/50 - pair programmed the entire thing
     - 50/50 - we split up the work evenly and each finished implementing one class
     - 50/50 - we split up the work evenly and implemented half the class each
+    - 50/50 - pair programmed the entire thing
     - Team dynamic is great right now
